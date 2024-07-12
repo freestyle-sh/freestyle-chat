@@ -10,7 +10,7 @@ export interface MessageCS<Data extends { type: string }> {
 }
 
 export class TextMessageCS
-  implements MessageCS<{ text: string }, "TEXT_MESSAGE">
+  implements MessageCS<{ text: string; type: "TEXT_MESSAGE" }>
 {
   id = crypto.randomUUID();
   text: string;
@@ -77,7 +77,7 @@ export class MessageListCS<
   getMessages() {
     return Array.from(this.messages.values()).map((message) => ({
       data: message.getData() as ReturnType<
-        MessageTypes[keyof DefaultMessageTypes]["getData"]
+        MessageTypes[keyof MessageTypes]["getData"]
       >,
       sender: {
         id: message.sender.id,

@@ -3,8 +3,11 @@ import { useCloudQuery } from "freestyle-sh/react";
 import type { MessageListCS } from "../chat";
 import * as React from "react";
 
-export function Chat(props: {
+export function Chat<T extends MessageListCS>(props: {
   chatbot: ReturnType<typeof useCloud<typeof MessageListCS>>;
+  displayMessage: (
+    message: ReturnType<T["getMessages"]>[number]
+  ) => React.JSX.Element;
 }) {
   const { data: messages } = useCloudQuery(props.chatbot.getMessages);
 
@@ -12,9 +15,7 @@ export function Chat(props: {
     <div>
       <div>
         {messages.map((message) => {
-          if (message.data.type === "TEXT_MESSAGE") {
-            message.data.text;
-          }
+          return props.displayMessage(message);
         })}
       </div>
       <form

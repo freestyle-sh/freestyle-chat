@@ -19,7 +19,9 @@ export class TypingCS extends TypingIndicatorsCS {
   static id = "typing";
 }
 
-export class CustomMessageCS implements MessageCS<{ count: number }> {
+export class CustomMessageCS
+  implements MessageCS<{ count: number; type: "CUSTOM" }>
+{
   id = crypto.randomUUID();
   count: number = 0;
   readBy: BaseUserCS[] = [];
@@ -29,8 +31,8 @@ export class CustomMessageCS implements MessageCS<{ count: number }> {
     this.sender = sender;
   }
 
-  getData(): { count: number } {
-    return { count: this.count };
+  getData() {
+    return { count: this.count, type: "CUSTOM" as const };
   }
 }
 
