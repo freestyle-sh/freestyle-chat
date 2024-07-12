@@ -1,0 +1,25 @@
+{
+  "name": "freestyle-chat",
+  "module": "./src/chat.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/chat.ts",
+      "types": "./src/chat.ts"
+    },
+    "./react": {
+      "import": "./src/react/chat.tsx",
+      "types": "./src/react/chat.tsx"
+    }
+  },
+  "dependencies": {
+    "freestyle-sh": "^0.2.28",
+    "freestyle-auth": "^0.1.0"
+  },
+  "peerDependencies": {
+    "react": "*"
+  },
+  "optionalDependencies": {
+    "react": "*"
+  }
+}

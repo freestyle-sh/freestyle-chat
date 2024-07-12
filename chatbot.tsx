@@ -1,7 +1,7 @@
-import { Chat } from "../src/react/chat";
+import { Chat } from "./src/react/chat";
 import { cloudstate } from "freestyle-sh";
 import { BaseUserCS } from "freestyle-auth/passkey";
-import { ChatCS } from "../src/chat";
+import { ChatCS } from "./src/chat";
 
 const SERVER_USER = {
   id: "chatbot",
