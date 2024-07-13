@@ -1,4 +1,7 @@
 import { defineConfig } from "freestyle-sh";
+import { config } from "dotenv";
+
+config();
 
 export default defineConfig({
   dev: {

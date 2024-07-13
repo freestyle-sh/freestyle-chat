@@ -9,7 +9,12 @@ export function Chat<
 >(props: {
   chatbot: ReturnType<typeof useCloud<typeof MessageListCS>>;
   displayMessage: (
-    message: ReturnType<T["getMessages"]>[number]
+    message: ReturnType<T["getMessages"]>[number],
+    i: number,
+    options: {
+      lastMessage: ReturnType<T["getMessages"]>[number] | undefined;
+      nextMessage: ReturnType<T["getMessages"]>[number] | undefined;
+    }
   ) => React.JSX.Element;
   placeholder?: string;
 }) {
@@ -31,14 +36,16 @@ export function Chat<
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "0.5rem",
           justifyContent: "flex-end",
           paddingBottom: "3rem",
           width: "100%",
         }}
       >
-        {messages?.map((message) => {
-          return props.displayMessage(message);
+        {messages?.map((message, i) => {
+          return props.displayMessage(message, i, {
+            lastMessage: messages[i - 1],
+            nextMessage: messages[i + 1],
+          });
         })}
       </div>
       <form
@@ -52,7 +59,9 @@ export function Chat<
           e.preventDefault();
           console.log(e.target);
           const text = e.target.elements.text.value;
-          await props.chatbot.sendTextMessage({ text });
+          if (text.length > 0) {
+            await props.chatbot.sendTextMessage({ text });
+          }
         }}
       >
         <div

@@ -35,8 +35,10 @@ export class CustomMessageCS
   }
 }
 
+type MessageTypes = [TextMessageCS, CustomMessageCS];
+
 @cloudstate
-export class ChatbotCS extends MessageListCS<[TextMessageCS, CustomMessageCS]> {
+export class ChatbotCS extends MessageListCS<MessageTypes> {
   static id = "chatbot";
 
   override getCurrentUser(): BaseUserCS {
@@ -46,9 +48,17 @@ export class ChatbotCS extends MessageListCS<[TextMessageCS, CustomMessageCS]> {
     };
   }
 
-  override _onMessageReceived() {
-    const openai = new OpenAI();
-    openai.chat.completions.create({
+  override async _onMessageAdded(message: MessageTypes[number]) {
+    // only respond to messages sent by the user
+    if (message.sender.id !== this.getCurrentUser().id) {
+      return;
+    }
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    const res = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: Array.from(this.messages.values())
         .filter((message) => message instanceof TextMessageCS)
@@ -65,5 +75,12 @@ export class ChatbotCS extends MessageListCS<[TextMessageCS, CustomMessageCS]> {
           };
         }),
     });
+
+    console.log(res.choices[0].message.content);
+
+    await this._addTextMessage(
+      { text: res.choices[0].message.content! },
+      SERVER_USER
+    );
   }
 }

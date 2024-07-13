@@ -53,7 +53,7 @@ export class MessageListCS<
     this.messages.set(message.id, message);
   }
 
-  _addTextMessage({ text }: { text: string }, user: BaseUserCS) {
+  async _addTextMessage({ text }: { text: string }, user: BaseUserCS) {
     const message = new TextMessageCS({
       text,
       sender: user,
@@ -61,12 +61,11 @@ export class MessageListCS<
 
     this.messages.set(message.id, message);
     invalidate(useCloud<typeof MessageListCS>(this.id).getMessages);
+    await this._onMessageAdded(message);
     return message;
   }
 
-  _onMessageReceived(message: MessageTypes[number]) {
-    this._createMessage(message);
-  }
+  _onMessageAdded(message: MessageTypes[number]) {}
 
   getMessages() {
     return Array.from(this.messages.values()).map((message) => ({
