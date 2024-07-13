@@ -5,9 +5,8 @@ import {
   TextMessageCS,
   TypingIndicatorsCS,
   type MessageCS,
-} from "freestyle-chat";
+} from "../../../../src/chat";
 import OpenAI from "openai";
-import { AuthCS } from "./auth";
 
 const SERVER_USER: BaseUserCS = {
   id: "chatbot",
@@ -37,17 +36,13 @@ export class CustomMessageCS
 }
 
 @cloudstate
-export class ChatbotCS extends MessageListCS<{
-  TEXT_MESSAGE: TextMessageCS;
-  CUSTOM_MESSAGE: CustomMessageCS;
-}> {
+export class ChatbotCS extends MessageListCS<[TextMessageCS, CustomMessageCS]> {
   static id = "chatbot";
 
   override getCurrentUser(): BaseUserCS {
-    const user = useLocal(AuthCS).getDefiniteCurrentUser();
     return {
-      id: crypto.randomUUID(),
-      username: user.username,
+      id: "anonymous",
+      username: "Anonymous",
     };
   }
 

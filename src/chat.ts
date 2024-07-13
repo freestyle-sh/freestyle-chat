@@ -9,6 +9,7 @@ export interface MessageCS<Data extends { type: string }> {
   getData(): Data;
 }
 
+@cloudstate
 export class TextMessageCS
   implements MessageCS<{ text: string; type: "TEXT_MESSAGE" }>
 {
@@ -30,21 +31,14 @@ export class TextMessageCS
   }
 }
 
-export interface DefaultMessageTypes {
-  TEXT_MESSAGE: TextMessageCS;
-}
+export type DefaultMessageTypes = [TextMessageCS];
 
 @cloudstate
 export class MessageListCS<
-  MessageTypes extends DefaultMessageTypes = DefaultMessageTypes
+  MessageTypes extends MessageCS<any>[] = DefaultMessageTypes
 > {
   id = crypto.randomUUID();
-  messages = new Map<
-    string,
-    MessageCS<
-      ReturnType<DefaultMessageTypes[keyof DefaultMessageTypes]["getData"]>
-    >
-  >();
+  messages = new Map<string, MessageTypes[number]>();
 
   sendTextMessage(message: { text: string }) {
     return this._addTextMessage(
@@ -55,7 +49,7 @@ export class MessageListCS<
     );
   }
 
-  _createMessage(message: MessageCS<any>) {
+  _createMessage(message: MessageTypes[number]) {
     this.messages.set(message.id, message);
   }
 
@@ -70,21 +64,19 @@ export class MessageListCS<
     return message;
   }
 
-  _onMessageReceived(message: MessageCS) {
+  _onMessageReceived(message: MessageTypes[number]) {
     this._createMessage(message);
   }
 
   getMessages() {
     return Array.from(this.messages.values()).map((message) => ({
-      data: message.getData() as ReturnType<
-        MessageTypes[keyof MessageTypes]["getData"]
-      >,
+      data: message.getData() as ReturnType<MessageTypes[number]["getData"]>,
       sender: {
         id: message.sender.id,
         displayName: message.sender.username,
       },
       id: message.id,
-      // type: message.type,
+      isSelf: message.sender.id === this.getCurrentUser().id,
     }));
   }
 
