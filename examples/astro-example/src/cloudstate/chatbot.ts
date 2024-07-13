@@ -1,4 +1,4 @@
-import { cloudstate, useLocal } from "freestyle-sh";
+import { cloudstate, invalidate, useCloud, useLocal } from "freestyle-sh";
 import { type BaseUserCS } from "freestyle-auth/passkey";
 import {
   MessageListCS,
@@ -18,24 +18,30 @@ export class TypingCS extends TypingIndicatorsCS {
   static id = "typing";
 }
 
-export class CustomMessageCS
-  implements MessageCS<{ count: number; type: "CUSTOM" }>
+@cloudstate
+export class CounterMessageCS
+  implements MessageCS<{ count: number; type: "COUNTER" }>
 {
   id = crypto.randomUUID();
   count: number = 0;
   readBy: BaseUserCS[] = [];
   sender: BaseUserCS;
 
-  constructor(sender: BaseUserCS) {
+  constructor({ sender }: { sender: BaseUserCS }) {
     this.sender = sender;
   }
 
   getData() {
-    return { count: this.count, type: "CUSTOM" as const };
+    return { count: this.count, type: "COUNTER" as const };
+  }
+
+  increment() {
+    invalidate(useCloud<typeof CounterMessageCS>(this.id).getData);
+    return ++this.count;
   }
 }
 
-type MessageTypes = [TextMessageCS, CustomMessageCS];
+type MessageTypes = [TextMessageCS, CounterMessageCS];
 
 @cloudstate
 export class ChatbotCS extends MessageListCS<MessageTypes> {
@@ -48,9 +54,28 @@ export class ChatbotCS extends MessageListCS<MessageTypes> {
     };
   }
 
+  async sendCounterMessage() {
+    await this._addCounterMessage(this.getCurrentUser());
+  }
+
+  async _addCounterMessage(sender: BaseUserCS) {
+    const message = new CounterMessageCS({
+      sender: this.getCurrentUser(),
+    });
+
+    this.messages.set(message.id, message);
+    invalidate(useCloud<typeof MessageListCS>(this.id).getMessages);
+    await this._onMessageAdded(message);
+    return message;
+  }
+
   override async _onMessageAdded(message: MessageTypes[number]) {
     // only respond to messages sent by the user
     if (message.sender.id !== this.getCurrentUser().id) {
+      return;
+    }
+
+    if (message.getData().type !== "TEXT_MESSAGE") {
       return;
     }
 
@@ -75,8 +100,6 @@ export class ChatbotCS extends MessageListCS<MessageTypes> {
           };
         }),
     });
-
-    console.log(res.choices[0].message.content);
 
     await this._addTextMessage(
       { text: res.choices[0].message.content! },

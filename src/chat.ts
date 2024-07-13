@@ -49,10 +49,6 @@ export class MessageListCS<
     );
   }
 
-  _createMessage(message: MessageTypes[number]) {
-    this.messages.set(message.id, message);
-  }
-
   async _addTextMessage({ text }: { text: string }, user: BaseUserCS) {
     const message = new TextMessageCS({
       text,
