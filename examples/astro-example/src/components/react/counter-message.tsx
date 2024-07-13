@@ -9,13 +9,16 @@ export function Counter(props: {
     isSelf: boolean;
     // data: ReturnType<CounterMessageCS["getData"]>;
   };
+  nextMessage?: {
+    isSelf: boolean;
+  };
 }) {
   const message = useCloud<typeof CounterMessageCS>(props.message.id);
   const { data } = useCloudQuery(message.getData);
   return (
     <MessageBubble
       side={props.message.isSelf ? "right" : "left"}
-      showTail={false}
+      showTail={props.nextMessage?.isSelf === props.message.isSelf}
       backgroundColor={"#d4d4d4"}
       textColor={"black"}
       onClick={async () => {

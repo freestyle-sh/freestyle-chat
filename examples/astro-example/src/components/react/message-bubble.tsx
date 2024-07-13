@@ -5,14 +5,17 @@ export function MessageBubble(props: {
   backgroundColor: string;
   textColor: string;
   onClick?: () => void;
+  key?: string;
+  spacing?: string;
 }) {
   return (
     <div
+      key={props.key}
       style={{
         display: "flex",
         width: "100%",
         justifyContent: props.side === "right" ? "flex-end" : "flex-start",
-        paddingTop: props.showTail ? "1pt" : "0.5rem",
+        paddingTop: props.spacing ?? "0.5rem",
         maxWidth: "30rem",
         position: "relative",
         marginLeft: "auto",
@@ -23,18 +26,26 @@ export function MessageBubble(props: {
         style={{
           backgroundColor: props.backgroundColor,
           padding: "0.5rem",
+          paddingTop: "0.3rem",
+          paddingBottom: "0.3rem",
           borderRadius: "1rem",
-          paddingRight: "1rem",
-          paddingLeft: "1rem",
           fontFamily: "sans-serif",
           marginLeft: props.side == "right" ? "2rem" : "0rem",
           marginRight: props.side == "right" ? "0rem" : "2rem",
-          display: "inline",
+          display: "flex",
           color: props.textColor,
+          minWidth: "1.5rem",
         }}
         onClick={props.onClick}
       >
-        {props.children}
+        <span
+          style={{
+            marginLeft: "auto",
+            marginRight: "auto",
+          }}
+        >
+          {props.children}
+        </span>
       </div>
       <svg
         style={{
@@ -43,7 +54,7 @@ export function MessageBubble(props: {
           bottom: 0,
           translate: props.side === "right" ? "47%" : "-47%",
           scale: props.side === "right" ? "0.8" : "-0.8 0.8",
-          opacity: props.showTail ? 0 : 1,
+          opacity: props.showTail ? 1 : 0,
         }}
         width="20"
         height="16"

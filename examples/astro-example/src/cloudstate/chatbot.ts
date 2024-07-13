@@ -1,9 +1,8 @@
-import { cloudstate, invalidate, useCloud, useLocal } from "freestyle-sh";
+import { cloudstate, invalidate, useCloud } from "freestyle-sh";
 import { type BaseUserCS } from "freestyle-auth/passkey";
 import {
   MessageListCS,
   TextMessageCS,
-  TypingIndicatorsCS,
   type MessageCS,
 } from "../../../../src/chat";
 import OpenAI from "openai";
@@ -12,11 +11,6 @@ const SERVER_USER: BaseUserCS = {
   id: "chatbot",
   username: "chatbot",
 };
-
-@cloudstate
-export class TypingCS extends TypingIndicatorsCS {
-  static id = "typing";
-}
 
 @cloudstate
 export class CounterMessageCS
@@ -44,31 +38,8 @@ export class CounterMessageCS
 type MessageTypes = [TextMessageCS, CounterMessageCS];
 
 @cloudstate
-export class ChatbotCS extends MessageListCS<MessageTypes> {
-  static id = "chatbot";
-
-  override getCurrentUser(): BaseUserCS {
-    return {
-      id: "anonymous",
-      username: "Anonymous",
-    };
-  }
-
-  async sendCounterMessage() {
-    await this._addCounterMessage(this.getCurrentUser());
-  }
-
-  async _addCounterMessage(sender: BaseUserCS) {
-    const message = new CounterMessageCS({
-      sender: this.getCurrentUser(),
-    });
-
-    this.messages.set(message.id, message);
-    invalidate(useCloud<typeof MessageListCS>(this.id).getMessages);
-    await this._onMessageAdded(message);
-    return message;
-  }
-
+export class ChatbotConversationCS extends MessageListCS<MessageTypes> {
+  id = crypto.randomUUID();
   override async _onMessageAdded(message: MessageTypes[number]) {
     // only respond to messages sent by the user
     if (message.sender.id !== this.getCurrentUser().id) {
@@ -105,5 +76,27 @@ export class ChatbotCS extends MessageListCS<MessageTypes> {
       { text: res.choices[0].message.content! },
       SERVER_USER
     );
+  }
+
+  override getCurrentUser(): BaseUserCS {
+    return {
+      id: "anonymous",
+      username: "Anonymous",
+    };
+  }
+
+  async sendCounterMessage() {
+    await this._addCounterMessage(this.getCurrentUser());
+  }
+
+  async _addCounterMessage(sender: BaseUserCS) {
+    const message = new CounterMessageCS({
+      sender: this.getCurrentUser(),
+    });
+
+    this.messages.set(message.id, message);
+    invalidate(useCloud<typeof MessageListCS>(this.id).getMessages);
+    await this._onMessageAdded(message);
+    return message;
   }
 }

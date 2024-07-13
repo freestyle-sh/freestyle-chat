@@ -1,22 +1,8 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import { Chatbot } from "../components/react/chatbot";
+import { useCloud } from "freestyle-sh";
+import { ConversationManagerCS } from "../cloudstate/chatbot-manager";
+
+const manager = useCloud<typeof ConversationManagerCS>("conversation-manager");
+const { id } = await manager.createConversation();
+return Astro.redirect(`/chat/${id}`);
 ---
-
-<Layout title="Freestyle.sh Project">
-  <main>
-    <Chatbot client:load />
-  </main>
-</Layout>
-
-<style>
-  body {
-    padding: 0;
-    margin: 0;
-    height: 100dvh;
-  }
-
-  main {
-    height: calc(100% - 3rem);
-  }
-</style>
