@@ -1,16 +1,17 @@
 export function MessageBubble(props: {
   showTail: boolean;
   side: "left" | "right";
-  children: React.JSX.Element | string;
+  children: React.JSX.Element | React.ReactNode | string;
   backgroundColor: string;
   textColor: string;
   onClick?: () => void;
-  key?: string;
   spacing?: string;
+  height?: string;
+  paddingTop?: string;
+  paddingBottom?: string;
 }) {
   return (
     <div
-      key={props.key}
       style={{
         display: "flex",
         width: "100%",
@@ -26,8 +27,8 @@ export function MessageBubble(props: {
         style={{
           backgroundColor: props.backgroundColor,
           padding: "0.5rem",
-          paddingTop: "0.3rem",
-          paddingBottom: "0.3rem",
+          paddingTop: props.paddingTop ?? "0.3rem",
+          paddingBottom: props.paddingBottom ?? "0.3rem",
           borderRadius: "1rem",
           fontFamily: "sans-serif",
           marginLeft: props.side == "right" ? "2rem" : "0rem",
@@ -35,6 +36,7 @@ export function MessageBubble(props: {
           display: "flex",
           color: props.textColor,
           minWidth: "1.5rem",
+          height: props.height,
         }}
         onClick={props.onClick}
       >
