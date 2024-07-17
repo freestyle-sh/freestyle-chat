@@ -1,7 +1,8 @@
 import { cloudstate } from "freestyle-sh";
-import type { MessageCS } from "../../../../src/chat";
+import type { MessageCS } from "freestyle-chat";
 import type { BaseUserCS } from "freestyle-auth/passkey";
 import { TodoListCS } from "./todo-list";
+import type { ChatCompletionMessageToolCall } from "openai/resources/chat/completions";
 
 @cloudstate
 export class TodoListMessageCS implements MessageCS<{ type: "TODO_LIST" }> {
@@ -9,6 +10,7 @@ export class TodoListMessageCS implements MessageCS<{ type: "TODO_LIST" }> {
   readBy = [];
   sender: BaseUserCS;
   todoList: TodoListCS;
+  toolCall?: ChatCompletionMessageToolCall;
 
   constructor({ sender }: { sender: BaseUserCS }) {
     this.todoList = new TodoListCS();

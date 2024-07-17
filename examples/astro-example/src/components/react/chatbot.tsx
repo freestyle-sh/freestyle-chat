@@ -1,7 +1,7 @@
 import { Chat } from "./chat";
 import { useCloud } from "freestyle-sh";
 import type { ChatbotConversationCS } from "../../cloudstate/chatbot";
-import type { TextMessageCS } from "../../../../../src/chat";
+import type { TextMessageCS } from "../../../../../packages/freestyle-chat/src/chat";
 import { Counter } from "./counter-message";
 import { TextMessage } from "./text-message";
 import type { CounterMessageCS } from "../../cloudstate/counter-message";
@@ -22,11 +22,15 @@ export function Chatbot(props: { conversationId: string }) {
           switch (message.data.type) {
             case "TEXT_MESSAGE": {
               return (
-                <TextMessage message={message} lastMessage={lastMessage} />
+                <TextMessage
+                  key={message.id}
+                  message={message}
+                  lastMessage={lastMessage}
+                />
               );
             }
             case "COUNTER": {
-              return <Counter message={message} />;
+              return <Counter key={message.id} message={message} />;
             }
             case "TODO_LIST": {
               return <TodoListMessage key={message.id} message={message} />;

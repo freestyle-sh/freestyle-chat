@@ -3,7 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "freestyle dev",
+    "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
@@ -20,9 +20,9 @@
     "@types/react-dom": "^18.3.0",
     "astro": "^4.6.1",
     "dotenv": "^16.4.5",
-    "freestyle-chat": "file:../..",
+    "freestyle-chat": "file:../../packages/freestyle-chat",
     "freestyle-deno-astro-adapter": "^5.0.4",
-    "freestyle-sh": "^0.2.23",
+    "freestyle-sh": "file:../../../../../../JacobZwang/Documents/GitHub/xcloudplatform/packages/freestyle-sh/dist/npm",
     "nanostores": "^0.10.3",
     "openai": "^4.52.5",
     "react": "^18.3.1",

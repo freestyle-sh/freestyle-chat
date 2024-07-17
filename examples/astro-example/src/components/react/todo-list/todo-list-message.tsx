@@ -37,18 +37,17 @@ export function TodoListMessage(props: {
       backgroundColor="#f5f5f5"
       textColor="black"
       side={props.message.isSelf ? "right" : "left"}
-      showTail={props.nextMessage?.isSelf === props.message.isSelf}
+      showTail={props.nextMessage?.isSelf !== props.message.isSelf}
     >
       <root.div
         style={{
           height: "20rem",
         }}
-        styleSheets={[ref.current?.sheet || new CSSStyleSheet()]}
       >
         <style ref={ref} type="text/css">
           {styles}
         </style>
-        <body
+        <div
           data-theme="light"
           style={{
             height: "100%",
@@ -78,7 +77,7 @@ export function TodoListMessage(props: {
           >
             <TodoList todoListId={props.message.data.todoList.id} />
           </div>
-        </body>
+        </div>
       </root.div>
     </MessageBubble>
   );

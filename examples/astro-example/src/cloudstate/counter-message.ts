@@ -1,6 +1,6 @@
 import { cloudstate, invalidate, useCloud } from "freestyle-sh";
 import type { BaseUserCS } from "freestyle-auth/passkey";
-import type { MessageCS } from "../../../../src/chat";
+import type { MessageCS } from "freestyle-chat";
 
 @cloudstate
 export class CounterMessageCS

@@ -1,6 +1,6 @@
 import { useCloud } from "freestyle-sh";
 import { useCloudQuery } from "freestyle-sh/react";
-import type { MessageCS, MessageListCS } from "../../../../../src/chat";
+import type { MessageCS, MessageListCS } from "freestyle-chat";
 import { useLayoutEffect, useRef, useState } from "react";
 
 const MIN_TEXTAREA_HEIGHT = 31.5; /* - 19.5 */
@@ -113,7 +113,6 @@ export function Chat<
                   await props.chatbot.sendTextMessage({ text });
                 }
               }
-              console.log(e.key);
             }}
             ref={textareaRef}
             style={{
