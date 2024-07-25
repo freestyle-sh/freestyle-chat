@@ -1,6 +1,6 @@
 import { cloudstate, invalidate, useCloud } from "freestyle-sh";
 import { type BaseUserCS } from "freestyle-auth/passkey";
-export { TypingIndicatorsCS } from "./typing-indicators";
+export { TypingIndicatorsCS } from "./typing";
 
 export interface MessageCS<Data extends { type: string }> {
   id: string;
@@ -40,24 +40,26 @@ export class MessageListCS<
   id = crypto.randomUUID();
   messages = new Map<string, MessageTypes[number]>();
 
-  sendTextMessage(message: { text: string }) {
-    return this._addTextMessage(
-      {
-        text: message.text,
-      },
-      this.getCurrentUser()
-    );
+  async _addMessage(message: MessageTypes[number]) {
+    this.messages.set(message.id, message);
+    invalidate(useCloud<typeof MessageListCS>(this.id).getMessages);
+    await this._onMessageAdded(message);
+    return message;
   }
 
-  async _addTextMessage({ text }: { text: string }, user: BaseUserCS) {
+  async sendTextMessage(message: { text: string }) {
+    return await this._addTextMessage({
+      text: message.text,
+      user: this.getCurrentUser(),
+    });
+  }
+
+  async _addTextMessage({ text, user }: { text: string; user: BaseUserCS }) {
     const message = new TextMessageCS({
       text,
       sender: user,
     });
-
-    this.messages.set(message.id, message);
-    invalidate(useCloud<typeof MessageListCS>(this.id).getMessages);
-    await this._onMessageAdded(message);
+    await this._addMessage(message);
     return message;
   }
 
@@ -75,15 +77,15 @@ export class MessageListCS<
     }));
   }
 
-  markMessagesAsRead(ids: string[]) {
-    for (const id of ids) {
-      const message = this.messages.get(id);
-      if (message) {
-        message.readBy.push(this.getCurrentUser());
-      }
-    }
-    invalidate(useCloud<typeof MessageListCS>(this.id).getMessages);
-  }
+  // markMessagesAsRead(ids: string[]) {
+  //   for (const id of ids) {
+  //     const message = this.messages.get(id);
+  //     if (message) {
+  //       message.readBy.push(this.getCurrentUser());
+  //     }
+  //   }
+  //   invalidate(useCloud<typeof MessageListCS>(this.id).getMessages);
+  // }
 
   getCurrentUser(): BaseUserCS {
     throw new Error("Please override method getCurrentUser on ChatCS");

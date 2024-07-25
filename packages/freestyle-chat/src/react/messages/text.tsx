@@ -1,4 +1,4 @@
-import { MessageBubble } from "./message-bubble";
+import { MessageBubble } from "../message-bubble";
 
 export function TextMessage(props: {
   message: {

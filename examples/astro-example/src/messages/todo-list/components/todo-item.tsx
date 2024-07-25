@@ -1,7 +1,7 @@
 import { useCloudMutation } from "freestyle-sh/react";
 import { useCloud } from "freestyle-sh";
 import { useEffect, useState } from "react";
-import type { TodoItemCS } from "../../../cloudstate/todo-list";
+import type { TodoItemCS } from "../cloudstate/todo-list";
 
 export default function TodoItem(props: {
   id: string;

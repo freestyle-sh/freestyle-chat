@@ -1,13 +1,12 @@
 import { useCloud } from "freestyle-sh";
 import { useCloudQuery } from "freestyle-sh/react";
-import { MessageBubble } from "./message-bubble";
-import type { CounterMessageCS } from "../../cloudstate/counter-message";
+import { MessageBubble } from "freestyle-chat/react/message-bubble";
+import type { CounterMessageCS } from "../cloudstate/counter-message";
 
 export function Counter(props: {
   message: {
     id: string;
     isSelf: boolean;
-    // data: ReturnType<CounterMessageCS["getData"]>;
   };
   nextMessage?: {
     isSelf: boolean;

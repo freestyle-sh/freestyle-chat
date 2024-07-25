@@ -1,7 +1,9 @@
+import type { JSX, ReactNode } from "react";
+
 export function MessageBubble(props: {
   showTail: boolean;
   side: "left" | "right";
-  children: React.JSX.Element | React.ReactNode | string;
+  children: JSX.Element | ReactNode | string;
   backgroundColor: string;
   textColor: string;
   onClick?: () => void;

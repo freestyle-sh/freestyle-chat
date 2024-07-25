@@ -1,7 +1,7 @@
 import { useCloudMutation, useCloudQuery } from "freestyle-sh/react";
 import { useCloud } from "freestyle-sh";
 import { useState } from "react";
-import type { TodoListCS } from "../../../cloudstate/todo-list";
+import type { TodoListCS } from "../cloudstate/todo-list";
 
 export function CreateTodoItem(props: { id: string }) {
   const [text, setText] = useState<string>("");

@@ -1,28 +1,17 @@
-import { Chat } from "./chat";
+import { Chat } from "freestyle-chat/react";
 import { useCloud } from "freestyle-sh";
-import type { ChatbotConversationCS } from "../../cloudstate/chatbot";
-import type { TextMessageCS } from "../../../../../packages/freestyle-chat/src/chat";
-import { Counter } from "./counter-message";
-import { TextMessage } from "./text-message";
-import type { CounterMessageCS } from "../../cloudstate/counter-message";
-import { TodoListMessage } from "./todo-list/todo-list-message";
-import type { TodoListMessageCS } from "../../cloudstate/todo-list-message";
-import type { QuickReplyMessageCS } from "../../cloudstate/quick-reply-message";
+import type { ChatbotConversationCS } from "../cloudstate/chatbot";
+import { TextMessage } from "freestyle-chat/react/messages/text";
+import { TodoListMessage } from "../messages/todo-list/components/todo-list-message";
+import type { TodoListMessageCS } from "../messages/todo-list/cloudstate/todo-list-message";
+import type { CustomTextMessageCS } from "../messages/text/text-message";
 
 export function Chatbot(props: { conversationId: string }) {
   const chatbot = useCloud<typeof ChatbotConversationCS>(props.conversationId);
 
   return (
     <div className="h-full px-4">
-      <Chat<
-        [
-          TextMessageCS,
-          CounterMessageCS,
-          TodoListMessageCS,
-          QuickReplyMessageCS
-        ],
-        ChatbotConversationCS
-      >
+      <Chat<[CustomTextMessageCS, TodoListMessageCS], ChatbotConversationCS>
         chatbot={chatbot}
         displayMessage={(
           message,
@@ -39,9 +28,6 @@ export function Chatbot(props: { conversationId: string }) {
                   nextMessage={nextMessage}
                 />
               );
-            }
-            case "COUNTER": {
-              return <Counter key={message.id} message={message} />;
             }
             case "TODO_LIST": {
               return (

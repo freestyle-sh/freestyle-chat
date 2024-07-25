@@ -3,6 +3,11 @@ import { cloudstate, invalidate, useCloud } from "freestyle-sh";
 @cloudstate
 export class TodoListCS {
   id = crypto.randomUUID();
+  name: string;
+
+  constructor({ name }: { name: string }) {
+    this.name = name;
+  }
 
   items = new Map<string, TodoItemCS>();
 
@@ -11,15 +16,18 @@ export class TodoListCS {
     this.items.set(item.id, item);
 
     // forces the client to refetch the list
-    invalidate(useCloud<typeof TodoListCS>(this.id).getItems);
+    invalidate(useCloud<typeof TodoListCS>(this.id).getData);
 
     return item.info();
   }
 
-  getItems() {
-    return Array.from(this.items.values())
-      .map((item) => item.info())
-      .toReversed();
+  getData() {
+    return {
+      items: Array.from(this.items.values())
+        .map((item) => item.info())
+        .toReversed(),
+      name: this.name,
+    };
   }
 }
 
@@ -46,7 +54,7 @@ export class TodoItemCS {
     this.completed = !this.completed;
 
     // forces the client to refetch the list
-    invalidate(useCloud<typeof TodoListCS>(this.list.id).getItems);
+    invalidate(useCloud<typeof TodoListCS>(this.list.id).getData);
 
     return {
       completed: this.completed,

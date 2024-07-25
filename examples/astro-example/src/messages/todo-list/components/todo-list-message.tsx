@@ -1,8 +1,10 @@
-import { useRef, useState } from "react";
-import { MessageBubble } from "../message-bubble";
+import { MessageBubble } from "../../../../../../packages/freestyle-chat/src/react/message-bubble";
 import { CreateTodoItem } from "./create-todo-item";
 import { TodoList } from "./todo-list";
 import type { ChatbotConversationCS } from "../../../cloudstate/chatbot";
+import { useCloudQuery } from "freestyle-sh/react";
+import { useCloud } from "freestyle-sh";
+import { TodoListCS } from "../cloudstate/todo-list";
 
 export function TodoListMessage(props: {
   message: {
@@ -24,7 +26,8 @@ export function TodoListMessage(props: {
   renderedMessages: ReturnType<ChatbotConversationCS["getMessages"]>[number][];
   key?: string;
 }) {
-  const ref = useRef<HTMLStyleElement>(null);
+  const todoList = useCloud<typeof TodoListCS>(props.message.data.todoList.id);
+  const { data } = useCloudQuery(todoList.getData);
 
   const isLast =
     props.renderedMessages.findLast(
@@ -43,7 +46,7 @@ export function TodoListMessage(props: {
       >
         <div className="flex gap-2 text-neutral-500">
           <input type="checkbox" checked={true} disabled={true} />
-          Todo List
+          {data?.name}
         </div>
       </MessageBubble>
     );
@@ -63,6 +66,7 @@ export function TodoListMessage(props: {
       showTail={props.nextMessage?.isSelf !== props.message.isSelf}
     >
       <div className="px-2 py-2 flex flex-col gap-2">
+        <div className="font-bold">{data?.name}</div>
         <div>
           <CreateTodoItem id={props.message.data.todoList.id} />
         </div>

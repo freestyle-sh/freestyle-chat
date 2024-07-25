@@ -1,138 +1,25 @@
-import { cloudstate, invalidate, useCloud, useLocal } from "freestyle-sh";
+import { cloudstate } from "freestyle-sh";
 import { type BaseUserCS } from "freestyle-auth/passkey";
-import { MessageListCS, TextMessageCS } from "freestyle-chat";
+import { MessageListCS, TextMessageCS as _TextMessageCS } from "freestyle-chat";
 import OpenAI from "openai";
-import { CounterMessageCS } from "./counter-message";
-import { TodoListMessageCS } from "./todo-list-message";
-import {
-  QuickReplyMessageCS,
-  type QuickReplyItem,
-} from "./quick-reply-message";
-import type { ChatCompletionMessageToolCall } from "openai/resources/index";
-import { TodoListCS } from "./todo-list";
+import { TodoListMessageCS } from "../messages/todo-list/cloudstate/todo-list-message";
+import type {
+  ChatCompletionMessageToolCall,
+  ChatCompletionTool,
+} from "openai/resources/index";
+import { TodoListCS } from "../messages/todo-list/cloudstate/todo-list";
+import { CustomTextMessageCS } from "../messages/text/text-message";
 
-const SERVER_USER: BaseUserCS = {
+export const SERVER_USER: BaseUserCS = {
   id: "chatbot",
   username: "chatbot",
 };
 
-type MessageTypes = [
-  TextMessageCS,
-  CounterMessageCS,
-  TodoListMessageCS,
-  QuickReplyMessageCS
-];
+type MessageTypes = [CustomTextMessageCS, TodoListMessageCS];
 
 @cloudstate
 export class ChatbotConversationCS extends MessageListCS<MessageTypes> {
   id = crypto.randomUUID();
-
-  override async _onMessageAdded(message: MessageTypes[number]) {
-    // only respond to messages sent by the user
-    if (message.sender.id !== this.getCurrentUser().id) {
-      return;
-    }
-
-    if (message.getData().type !== "TEXT_MESSAGE") {
-      return;
-    }
-
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-
-    const res = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      tools: [ADD_TODO_ITEM_TOOL, CREATE_TODO_LIST_TOOL],
-      messages: Array.from(this.messages.values())
-        // .filter((message) => message instanceof TextMessageCS)
-        .map((message) => {
-          let role: "user" | "assistant" = "user";
-          if (message.sender.id === this.getCurrentUser().id) {
-            role = "user";
-          } else if (message.sender.id === SERVER_USER.id) {
-            role = "assistant";
-          }
-
-          const messageData = message.getData();
-
-          if (messageData.type === "TEXT_MESSAGE") {
-            return [
-              {
-                role,
-                content: messageData.text,
-              },
-            ];
-          } else if (message instanceof TodoListMessageCS) {
-            return [
-              {
-                role: "assistant",
-                content: "",
-                tool_calls: [message.toolCall],
-              },
-              {
-                role: "tool",
-                content: JSON.stringify({
-                  id: message.todoList.id,
-                  items: Array.from(message.todoList.items).map(
-                    ([id, item]) => ({
-                      text: item.text,
-                      completed: item.completed,
-                      id: id,
-                    })
-                  ),
-                }),
-                tool_call_id: message.toolCall.id,
-              },
-            ];
-          }
-        })
-        .flat(),
-    });
-
-    for (const call of res.choices[0].message.tool_calls ?? []) {
-      console.log(call);
-
-      if (call.function.name === "create-todo-list") {
-        const todoList = await this._addTodoListMessage(
-          {
-            todoList: new TodoListCS(),
-            toolCall: call,
-          },
-          SERVER_USER
-        );
-        for (const item of JSON.parse(call.function.arguments).items) {
-          todoList.todoList.addItem(item);
-        }
-      } else if (call.function.name === "add-todo-item") {
-        const args = JSON.parse(call.function.arguments);
-        const todoListMessage = Array.from(this.messages.values()).find(
-          (message) =>
-            message instanceof TodoListMessageCS &&
-            message.todoList.id === args.todoListId
-        )! as TodoListMessageCS;
-        this._addTodoListMessage(
-          {
-            todoList: todoListMessage.todoList,
-            toolCall: call,
-          },
-          SERVER_USER
-        );
-        for (const item of args.newItems) {
-          todoListMessage.todoList.addItem(item);
-        }
-      } else {
-        console.log(call);
-      }
-    }
-
-    if (res.choices[0].message.content?.trim()) {
-      await this._addTextMessage(
-        { text: res.choices[0].message.content! },
-        SERVER_USER
-      );
-    }
-  }
 
   override getCurrentUser(): BaseUserCS {
     return {
@@ -141,65 +28,113 @@ export class ChatbotConversationCS extends MessageListCS<MessageTypes> {
     };
   }
 
-  async _addQuickReplyMessage(items: QuickReplyItem[], sender: BaseUserCS) {
-    const message = new QuickReplyMessageCS(sender, items);
-
-    this.messages.set(message.id, message);
-    invalidate(useCloud<typeof MessageListCS>(this.id).getMessages);
-    await this._onMessageAdded(message);
-    return message;
-  }
-
-  async _addCounterMessage(sender: BaseUserCS) {
-    const message = new CounterMessageCS({
-      sender: sender,
+  override async _addTextMessage({
+    text,
+    user,
+  }: {
+    text: string;
+    user: BaseUserCS;
+  }): Promise<_TextMessageCS> {
+    const message = new CustomTextMessageCS({
+      text,
+      sender: user,
     });
-
-    this.messages.set(message.id, message);
-    invalidate(useCloud<typeof MessageListCS>(this.id).getMessages);
-    await this._onMessageAdded(message);
+    await this._addMessage(message);
     return message;
   }
 
-  async sendCounterMessage() {
-    await this._addCounterMessage(this.getCurrentUser());
-  }
-
-  async _addTodoListMessage(
-    options: {
-      todoList: TodoListCS;
-      toolCall?: ChatCompletionMessageToolCall;
-    },
-    sender: BaseUserCS
-  ) {
+  async _addTodoListMessage({
+    todoList,
+    toolCall,
+    user,
+  }: {
+    todoList: TodoListCS;
+    toolCall?: ChatCompletionMessageToolCall;
+    user: BaseUserCS;
+  }) {
     const message = new TodoListMessageCS({
-      sender: sender,
-      todoList: options.todoList,
+      sender: user,
+      todoList: todoList,
+      toolCall: toolCall,
     });
-    message.toolCall = options.toolCall;
-
-    this.messages.set(message.id, message);
-    invalidate(useCloud<typeof MessageListCS>(this.id).getMessages);
-    await this._onMessageAdded(message);
+    await this._addMessage(message);
     return message;
   }
 
-  async sendTodoListMessage() {
-    await this._addTodoListMessage(
-      {
-        todoList: new TodoListCS(),
-      },
-      this.getCurrentUser()
-    );
+  override async _onMessageAdded(message: MessageTypes[number]) {
+    // only respond to messages sent by the user
+    if (message.sender.id !== this.getCurrentUser().id) {
+      return;
+    }
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    const res = await openai.chat.completions.create({
+      model: "gpt-4o",
+      tools: [ADD_TODO_ITEM_TOOL, CREATE_TODO_LIST_TOOL],
+      messages: Array.from(this.messages.values())
+        .map((message) => {
+          console.log(message);
+          return message.asChatCompletions();
+        })
+        .flat(),
+    });
+
+    if (res.choices[0].message.content?.trim()) {
+      await this._addTextMessage({
+        text: res.choices[0].message.content!,
+        user: SERVER_USER,
+      });
+    }
+
+    for (const call of res.choices[0].message.tool_calls ?? []) {
+      const args = JSON.parse(call.function.arguments);
+      switch (call.function.name) {
+        case "create-todo-list": {
+          const todoList = await this._addTodoListMessage({
+            todoList: new TodoListCS({
+              name: args.name,
+            }),
+            toolCall: call,
+            user: SERVER_USER,
+          });
+          for (const item of args.items) {
+            todoList.todoList.addItem(item);
+          }
+          break;
+        }
+        case "add-todo-item":
+          {
+            let todoListMessage = Array.from(this.messages.values()).find(
+              (message) =>
+                message instanceof TodoListMessageCS &&
+                message.todoList.id === args.todoListId
+            ) as TodoListMessageCS;
+            let todoList =
+              todoListMessage?.todoList || new TodoListCS({ name: "Unnamed" });
+            await this._addTodoListMessage({
+              todoList: todoList,
+              toolCall: call,
+              user: SERVER_USER,
+            });
+            for (const item of args.newItems) {
+              todoList.addItem(item);
+            }
+          }
+          break;
+      }
+    }
   }
 }
 
-const CREATE_TODO_LIST_TOOL = {
+const CREATE_TODO_LIST_TOOL: ChatCompletionTool = {
   type: "function",
   function: {
     name: "create-todo-list",
     description:
-      "Send a todo list message to the user that allows the user to add items to the list",
+      "Send a todo list message to the user that allows the user to add items to the list. When creating a list, choose a good name for it if the user hasn't provided one.",
     parameters: {
       type: "object",
       properties: {
@@ -212,12 +147,16 @@ const CREATE_TODO_LIST_TOOL = {
           },
           required: ["text"],
         },
+        name: {
+          type: "string",
+        },
       },
+      required: ["name"],
     },
   },
 };
 
-const ADD_TODO_ITEM_TOOL = {
+const ADD_TODO_ITEM_TOOL: ChatCompletionTool = {
   type: "function",
   function: {
     name: "add-todo-item",
