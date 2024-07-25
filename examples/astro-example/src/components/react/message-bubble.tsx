@@ -35,7 +35,7 @@ export function MessageBubble(props: {
           marginRight: props.side == "right" ? "0rem" : "2rem",
           display: "flex",
           color: props.textColor,
-          minWidth: "1.5rem",
+          minWidth: "2rem",
           height: props.height,
         }}
         onClick={props.onClick}

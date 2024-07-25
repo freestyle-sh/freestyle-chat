@@ -18,7 +18,7 @@ export default function TodoItem(props: {
   }, [props.completed]);
 
   return (
-    <label>
+    <label className="flex gap-2">
       <input
         type="checkbox"
         checked={completed}

@@ -9,6 +9,7 @@ import {
   type QuickReplyItem,
 } from "./quick-reply-message";
 import type { ChatCompletionMessageToolCall } from "openai/resources/index";
+import { TodoListCS } from "./todo-list";
 
 const SERVER_USER: BaseUserCS = {
   id: "chatbot",
@@ -42,54 +43,7 @@ export class ChatbotConversationCS extends MessageListCS<MessageTypes> {
 
     const res = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: "create-todo-list",
-            description:
-              "Send a todo list message to the user that allows the user to add items to the list",
-            parameters: {
-              type: "object",
-              properties: {
-                items: {
-                  type: "array",
-                  items: {
-                    text: {
-                      type: "string",
-                    },
-                  },
-                  required: ["text"],
-                },
-              },
-            },
-          },
-        },
-        {
-          type: "function",
-          function: {
-            name: "add-todo-item",
-            description:
-              "Add an item to an existing todo list. Can only be used if a todo list was already created in this conversation.",
-            parameters: {
-              type: "object",
-              properties: {
-                todoListId: {
-                  type: "string",
-                },
-                newItems: {
-                  type: "array",
-                  items: {
-                    text: {
-                      type: "string",
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      ],
+      tools: [ADD_TODO_ITEM_TOOL, CREATE_TODO_LIST_TOOL],
       messages: Array.from(this.messages.values())
         // .filter((message) => message instanceof TextMessageCS)
         .map((message) => {
@@ -137,19 +91,33 @@ export class ChatbotConversationCS extends MessageListCS<MessageTypes> {
     });
 
     for (const call of res.choices[0].message.tool_calls ?? []) {
+      console.log(call);
+
       if (call.function.name === "create-todo-list") {
-        const todoList = await this._addTodoListMessage(SERVER_USER, call);
+        const todoList = await this._addTodoListMessage(
+          {
+            todoList: new TodoListCS(),
+            toolCall: call,
+          },
+          SERVER_USER
+        );
         for (const item of JSON.parse(call.function.arguments).items) {
           todoList.todoList.addItem(item);
         }
       } else if (call.function.name === "add-todo-item") {
         const args = JSON.parse(call.function.arguments);
-        // const todoList = useLocal<typeof TodoListCS>(args.todoListId);
         const todoListMessage = Array.from(this.messages.values()).find(
           (message) =>
             message instanceof TodoListMessageCS &&
             message.todoList.id === args.todoListId
         )! as TodoListMessageCS;
+        this._addTodoListMessage(
+          {
+            todoList: todoListMessage.todoList,
+            toolCall: call,
+          },
+          SERVER_USER
+        );
         for (const item of args.newItems) {
           todoListMessage.todoList.addItem(item);
         }
@@ -198,13 +166,17 @@ export class ChatbotConversationCS extends MessageListCS<MessageTypes> {
   }
 
   async _addTodoListMessage(
-    sender: BaseUserCS,
-    toolCall?: ChatCompletionMessageToolCall
+    options: {
+      todoList: TodoListCS;
+      toolCall?: ChatCompletionMessageToolCall;
+    },
+    sender: BaseUserCS
   ) {
     const message = new TodoListMessageCS({
       sender: sender,
+      todoList: options.todoList,
     });
-    message.toolCall = toolCall;
+    message.toolCall = options.toolCall;
 
     this.messages.set(message.id, message);
     invalidate(useCloud<typeof MessageListCS>(this.id).getMessages);
@@ -213,31 +185,59 @@ export class ChatbotConversationCS extends MessageListCS<MessageTypes> {
   }
 
   async sendTodoListMessage() {
-    await this._addTodoListMessage(this.getCurrentUser());
+    await this._addTodoListMessage(
+      {
+        todoList: new TodoListCS(),
+      },
+      this.getCurrentUser()
+    );
   }
 }
 
-// {
-//   type: "function",
-//   function: {
-//     name: "create-quick-reply",
-//     description: "Send a quick reply message to the user that allows the user to select between multiple options",
-//     parameters: {
-//       type: "object",
-//       properties: {
-//         items: {
-//           type: "array",
-//           properties: {
-//             text: {
-//               type: "string",
-//             },
-//             value: {
-//               type: "string",
-//             },
+const CREATE_TODO_LIST_TOOL = {
+  type: "function",
+  function: {
+    name: "create-todo-list",
+    description:
+      "Send a todo list message to the user that allows the user to add items to the list",
+    parameters: {
+      type: "object",
+      properties: {
+        items: {
+          type: "array",
+          items: {
+            text: {
+              type: "string",
+            },
+          },
+          required: ["text"],
+        },
+      },
+    },
+  },
+};
 
-//           }
-//         }
-//       }
-//     }
-//   },
-// }
+const ADD_TODO_ITEM_TOOL = {
+  type: "function",
+  function: {
+    name: "add-todo-item",
+    description:
+      "Add an item to an existing todo list. Can only be used if a todo list was already created in this conversation.",
+    parameters: {
+      type: "object",
+      properties: {
+        todoListId: {
+          type: "string",
+        },
+        newItems: {
+          type: "array",
+          items: {
+            text: {
+              type: "string",
+            },
+          },
+        },
+      },
+    },
+  },
+};

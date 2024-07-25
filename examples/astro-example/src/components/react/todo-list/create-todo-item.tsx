@@ -31,14 +31,15 @@ export function CreateTodoItem(props: { id: string }) {
         setText("");
       }}
     >
-      <fieldset role="group">
+      <fieldset role="group" className="flex gap-2">
         <input
           placeholder="Create a new todo"
           value={text}
           type="text"
           onInput={(e) => setText(e.currentTarget.value)}
+          className="bg-white py-1 px-2 rounded"
         />
-        <input type="submit" value="Add Item" />
+        {/* <input type="submit" value="Add Item" className="bg-blue-500" /> */}
       </fieldset>
     </form>
   );

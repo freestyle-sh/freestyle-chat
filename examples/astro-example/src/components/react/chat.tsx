@@ -16,6 +16,7 @@ export function Chat<
     options: {
       lastMessage: ReturnType<T["getMessages"]>[number] | undefined;
       nextMessage: ReturnType<T["getMessages"]>[number] | undefined;
+      renderedMessages: ReturnType<T["getMessages"]>[number][];
     }
   ) => React.JSX.Element;
   placeholder?: string;
@@ -63,6 +64,7 @@ export function Chat<
           return props.displayMessage(message, i, {
             lastMessage: messages[i - 1],
             nextMessage: messages[i + 1],
+            renderedMessages: messages,
           });
         })}
       </div>

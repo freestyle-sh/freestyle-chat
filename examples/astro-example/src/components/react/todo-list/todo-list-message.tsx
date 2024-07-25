@@ -2,8 +2,7 @@ import { useRef, useState } from "react";
 import { MessageBubble } from "../message-bubble";
 import { CreateTodoItem } from "./create-todo-item";
 import { TodoList } from "./todo-list";
-import root from "react-shadow";
-import styles from "../../../../public/todo-list.css?raw";
+import type { ChatbotConversationCS } from "../../../cloudstate/chatbot";
 
 export function TodoListMessage(props: {
   message: {
@@ -22,63 +21,55 @@ export function TodoListMessage(props: {
   lastMessage?: {
     isSelf: boolean;
   };
+  renderedMessages: ReturnType<ChatbotConversationCS["getMessages"]>[number][];
   key?: string;
 }) {
   const ref = useRef<HTMLStyleElement>(null);
 
+  const isLast =
+    props.renderedMessages.findLast(
+      (message) =>
+        message.data.type === "TODO_LIST" &&
+        message.data.todoList.id === props.message.data.todoList.id
+    )?.id === props.message.id;
+
+  if (!isLast) {
+    return (
+      <MessageBubble
+        backgroundColor="transparent"
+        textColor="#737373"
+        side={props.message.isSelf ? "right" : "left"}
+        showTail={props.nextMessage?.isSelf !== props.message.isSelf}
+      >
+        <div className="flex gap-2 text-neutral-500">
+          <input type="checkbox" checked={true} disabled={true} />
+          Todo List
+        </div>
+      </MessageBubble>
+    );
+  }
+
   return (
     <MessageBubble
-      height="20rem"
+      height="unset"
       spacing={
         props.lastMessage?.isSelf === props.message.isSelf && props.nextMessage
           ? "1pt"
           : "0.5rem"
       }
-      backgroundColor="#f5f5f5"
+      backgroundColor="#e5e5e5"
       textColor="black"
       side={props.message.isSelf ? "right" : "left"}
       showTail={props.nextMessage?.isSelf !== props.message.isSelf}
     >
-      <root.div
-        style={{
-          height: "20rem",
-        }}
-      >
-        <style ref={ref} type="text/css">
-          {styles}
-        </style>
-        <div
-          data-theme="light"
-          style={{
-            height: "100%",
-            display: "grid",
-          }}
-        >
-          <div
-            style={{
-              paddingTop: "1rem",
-              paddingLeft: "1rem",
-              paddingRight: "1rem",
-            }}
-          >
-            <h1>
-              <a href="https://www.freestyle.sh" target="_blank">
-                freestyle.sh
-              </a>
-            </h1>
-            <CreateTodoItem id={props.message.data.todoList.id} />
-          </div>
-          <div
-            style={{
-              paddingLeft: "1rem",
-              paddingRight: "1rem",
-              overflow: "scroll",
-            }}
-          >
-            <TodoList todoListId={props.message.data.todoList.id} />
-          </div>
+      <div className="px-2 py-2 flex flex-col gap-2">
+        <div>
+          <CreateTodoItem id={props.message.data.todoList.id} />
         </div>
-      </root.div>
+        <div>
+          <TodoList todoListId={props.message.data.todoList.id} />
+        </div>
+      </div>
     </MessageBubble>
   );
 }

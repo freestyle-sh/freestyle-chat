@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "freestyle-sh": "npm:freestyle-sh",
+    "freestyle-auth": "npm:freestyle-auth",
+    "react": "npm:react"
+  }
+}

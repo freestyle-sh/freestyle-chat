@@ -12,8 +12,14 @@ export class TodoListMessageCS implements MessageCS<{ type: "TODO_LIST" }> {
   todoList: TodoListCS;
   toolCall?: ChatCompletionMessageToolCall;
 
-  constructor({ sender }: { sender: BaseUserCS }) {
-    this.todoList = new TodoListCS();
+  constructor({
+    sender,
+    todoList,
+  }: {
+    sender: BaseUserCS;
+    todoList: TodoListCS;
+  }) {
+    this.todoList = todoList;
     this.sender = sender;
   }
 

@@ -2,6 +2,7 @@
     "compilerOptions": {
         "jsx": "react",
         "moduleResolution": "bundler",
-        "module": "Preserve"
+        "module": "Preserve",
+        "lib": ["ESNext"]
     }
 }
