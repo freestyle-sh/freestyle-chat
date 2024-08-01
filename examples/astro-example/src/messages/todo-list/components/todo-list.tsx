@@ -14,7 +14,7 @@ export function TodoList(props: { todoListId: string }) {
   return (
     <>
       {data?.items?.map((item) => (
-        <div key={item.id}>
+        <div>
           <TodoItemView
             id={item.id}
             text={item.text}

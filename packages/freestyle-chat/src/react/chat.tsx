@@ -2,6 +2,12 @@ import { useCloud } from "freestyle-sh";
 import { useCloudQuery } from "freestyle-sh/react";
 import type { MessageCS, MessageListCS } from "freestyle-chat";
 import { useLayoutEffect, useRef, useState } from "react";
+// import {
+//   TransitionGroup,
+//   CSSTransition,
+//   Transition,
+// } from "react-transition-group";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MIN_TEXTAREA_HEIGHT = 31.5; /* - 19.5 */
 
@@ -56,17 +62,40 @@ export function Chat<
           justifyContent: "flex-end",
           paddingBottom: "3rem",
           width: "100%",
-          // paddingLeft: "1rem",
-          // paddingRight: "1rem",
         }}
       >
-        {messages?.map((message, i) => {
-          return props.displayMessage(message, i, {
-            lastMessage: messages[i - 1],
-            nextMessage: messages[i + 1],
-            renderedMessages: messages,
-          });
-        })}
+        <AnimatePresence initial={false}>
+          {messages?.map((message, i) => {
+            return (
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  gridTemplateRows: "0fr",
+                  display: "grid",
+                }}
+                animate={{
+                  opacity: 1,
+                  gridTemplateRows: "1fr",
+                  display: "grid",
+                }}
+                exit={{ opacity: 0, gridTemplateRows: "0fr", display: "grid" }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+              >
+                <div
+                  style={{
+                    gridRow: "1 / span 2",
+                  }}
+                >
+                  {props.displayMessage(message, i, {
+                    lastMessage: messages[i - 1],
+                    nextMessage: messages[i + 1],
+                    renderedMessages: messages,
+                  })}
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
       <form
         style={{

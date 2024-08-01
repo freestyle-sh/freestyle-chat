@@ -20,3 +20,15 @@ const { title } = Astro.props;
     <slot />
   </body>
 </html>
+
+<style>
+  .stack {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .stack > * {
+    grid-column: 1;
+    grid-row: 1;
+  }
+</style>
