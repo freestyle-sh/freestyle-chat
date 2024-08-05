@@ -1,7 +1,7 @@
 import { Chat } from "../../../../packages/freestyle-chat/src/react/chat";
 import { useCloud } from "freestyle-sh";
 import type { ChatbotConversationCS } from "../cloudstate/chatbot";
-import { TextMessage } from "freestyle-chat/react/messages/text";
+import { TextMessage } from "../../../../packages/freestyle-chat/src/react/messages/text";
 import { TodoListMessage } from "../messages/todo-list/components/todo-list-message";
 import type { TodoListMessageCS } from "../messages/todo-list/cloudstate/todo-list-message";
 import type { CustomTextMessageCS } from "../messages/text/text-message";
@@ -16,7 +16,7 @@ export function Chatbot(props: { conversationId: string }) {
   );
 
   return (
-    <div className="h-full px-4">
+    <div className="h-full px-4 text-white">
       <div>
         <button
           onClick={async () => {
@@ -34,23 +34,29 @@ export function Chatbot(props: { conversationId: string }) {
         displayMessage={(
           message,
           _i,
-          { lastMessage, nextMessage, renderedMessages }
+          {
+            lastMessage,
+            nextMessage,
+            renderedMessages,
+            messageHeight,
+            messageWidth,
+          }
         ) => {
           switch (message.data.type) {
             case "TEXT_MESSAGE": {
               return (
                 <TextMessage
-                  key={message.id}
                   message={message}
+                  messageHeight={messageHeight}
                   lastMessage={lastMessage}
                   nextMessage={nextMessage}
+                  messageWidth={message.width}
                 />
               );
             }
             case "TODO_LIST": {
               return (
                 <TodoListMessage
-                  key={message.id}
                   message={message}
                   renderedMessages={renderedMessages}
                 />
@@ -60,7 +66,6 @@ export function Chatbot(props: { conversationId: string }) {
               return (
                 <SelectTodoListMessage
                   id={message.id}
-                  key={message.id}
                   items={message.data.lists}
                 />
               );

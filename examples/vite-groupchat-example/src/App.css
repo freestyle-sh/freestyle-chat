@@ -1,0 +1,12 @@
+#root {
+  max-width: 30rem;
+  margin: 0 auto;
+  max-height: 100dvh;
+  height: 100dvh;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
