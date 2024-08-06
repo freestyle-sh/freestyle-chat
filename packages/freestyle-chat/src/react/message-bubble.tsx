@@ -26,6 +26,7 @@ export function MessageBubble(props: {
         position: "relative",
         marginLeft: "auto",
         marginRight: "auto",
+        boxSizing: "initial",
       }}
     >
       <motion.div
@@ -43,12 +44,14 @@ export function MessageBubble(props: {
           color: props.textColor,
           // minWidth: "2rem",
           height: props.height,
+          boxSizing: "initial",
         }}
         initial={{
           width: props.wooshAnimation && props.bubbleWidth ? "200%" : "unset",
-          backgroundColor: props.wooshAnimation
-            ? `color-mix(in srgb, ${props.backgroundColor}, transparent 100%)`
-            : props.backgroundColor,
+          backgroundColor:
+            props.wooshAnimation && props.bubbleWidth
+              ? `color-mix(in srgb, ${props.backgroundColor}, transparent 100%)`
+              : props.backgroundColor,
           color: props.wooshAnimation ? "black" : undefined,
           zIndex: props.wooshAnimation ? 1 : "unset",
         }}

@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { MessageBubble } from "../message-bubble";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 
 export function TextMessage(props: {
   message: {
