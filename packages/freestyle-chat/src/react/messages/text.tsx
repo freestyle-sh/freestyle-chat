@@ -21,6 +21,8 @@ export function TextMessage(props: {
   animatedHeight?: number;
   /** only used for woosh animation */
   animatedWidth?: number;
+  backgroundColor?: string;
+  textColor?: string;
 }) {
   const message = props.message;
   const nextMessage = props.nextMessage;
@@ -52,8 +54,10 @@ export function TextMessage(props: {
         key={message.id}
         side={message.isSelf ? "right" : "left"}
         showTail={nextMessage?.isSelf !== message.isSelf}
-        backgroundColor={message.isSelf ? "#2563eb" : "#e5e5e5"}
-        textColor={message.isSelf ? "white" : "black"}
+        backgroundColor={
+          props.backgroundColor ?? (message.isSelf ? "#2563eb" : "#e5e5e5")
+        }
+        textColor={props.textColor ?? (message.isSelf ? "white" : "black")}
         spacing={lastMessage?.isSelf === message.isSelf ? "1pt" : "0.5rem"}
         height={props.animatedHeight}
       >
