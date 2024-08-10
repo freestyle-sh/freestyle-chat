@@ -9,10 +9,10 @@ export function MessageBubble(props: {
   textColor: string;
   onClick?: () => void;
   spacing?: string;
-  height?: string;
+  height?: number;
   paddingTop?: string;
   paddingBottom?: string;
-  bubbleWidth?: string;
+  bubbleWidth?: number;
   wooshAnimation?: boolean;
 }) {
   return (
@@ -43,7 +43,7 @@ export function MessageBubble(props: {
           display: "flex",
           color: props.textColor,
           // minWidth: "2rem",
-          height: props.height,
+          // height: props.height / 2,
           boxSizing: "initial",
         }}
         initial={{

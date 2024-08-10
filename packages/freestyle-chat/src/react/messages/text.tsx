@@ -18,8 +18,9 @@ export function TextMessage(props: {
     isSelf: boolean;
   };
   /** only used for woosh animation */
-  messageHeight?: string;
-  messageWidth?: string;
+  animatedHeight?: number;
+  /** only used for woosh animation */
+  animatedWidth?: number;
 }) {
   const message = props.message;
   const nextMessage = props.nextMessage;
@@ -30,10 +31,12 @@ export function TextMessage(props: {
   return (
     <motion.div
       ref={ref}
-      initial={{
-        // marginRight: message.isSelf ? "100%" : "0",
-        marginTop: message.isSelf ? props.messageHeight : "0",
-      }}
+      initial={
+        {
+          // marginRight: message.isSelf ? "100%" : "0",
+          // marginTop: message.isSelf ? props.animatedHeight : "0",
+        }
+      }
       animate={{
         // marginRight: "0",
         marginTop: "0",
@@ -45,13 +48,14 @@ export function TextMessage(props: {
     >
       <MessageBubble
         wooshAnimation={message.isSelf ? true : false}
-        bubbleWidth={props.messageWidth}
+        bubbleWidth={props.animatedWidth}
         key={message.id}
         side={message.isSelf ? "right" : "left"}
         showTail={nextMessage?.isSelf !== message.isSelf}
         backgroundColor={message.isSelf ? "#2563eb" : "#e5e5e5"}
         textColor={message.isSelf ? "white" : "black"}
         spacing={lastMessage?.isSelf === message.isSelf ? "1pt" : "0.5rem"}
+        height={props.animatedHeight}
       >
         {message.data.text}
       </MessageBubble>

@@ -2,6 +2,7 @@
   "name": "freestyle-chat",
   "module": "./src/chat.ts",
   "type": "module",
+  "version": "0.1.2",
   "exports": {
     ".": {
       "import": "./src/chat.ts",
@@ -34,7 +35,6 @@
     "react-dom": "^18.3.1"
   },
   "dependencies": {
-    "framer-motion": "^11.3.18",
-    "openai": "^4.53.0"
+    "framer-motion": "^11.3.18"
   }
 }

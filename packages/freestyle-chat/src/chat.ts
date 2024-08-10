@@ -1,5 +1,6 @@
-import { cloudstate, invalidate, useCloud } from "freestyle-sh";
+import { cloudstate, invalidate, useCloud, useRequest } from "freestyle-sh";
 import { type BaseUserCS } from "freestyle-auth/passkey";
+import { parse as parseCookie } from "cookie";
 export { TypingIndicatorsCS } from "./typing";
 
 export interface MessageCS<Data extends { type: string }> {
@@ -88,6 +89,14 @@ export class MessageListCS<
   // }
 
   getCurrentUser(): BaseUserCS {
-    throw new Error("Please override method getCurrentUser on ChatCS");
+    const req = useRequest();
+    const cookie = req.headers.get("cookie");
+    const parsedCookie = parseCookie(cookie ?? "");
+    const sessionId = parsedCookie["freestyle-session-id"];
+
+    return {
+      id: sessionId,
+      username: sessionId,
+    };
   }
 }

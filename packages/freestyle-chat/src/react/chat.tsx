@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getCanvasFont, getTextWidth } from "../utils/measure-text";
 import { scrollTo } from "../utils/scroll";
+import { TextMessage } from "./messages/text";
 
 const MIN_TEXTAREA_HEIGHT = 31.5; /* - 19.5 */
 
@@ -12,24 +13,16 @@ export function Chat<
   MessageTypes extends MessageCS<any>[],
   T extends MessageListCS<MessageTypes>
 >(props: {
-  chatbot: ReturnType<typeof useCloud<typeof MessageListCS>>;
-  displayMessage: (
-    message: ReturnType<T["getMessages"]>[number],
-    i: number,
-    options: {
-      lastMessage: ReturnType<T["getMessages"]>[number] | undefined;
-      nextMessage: ReturnType<T["getMessages"]>[number] | undefined;
-      renderedMessages: ReturnType<T["getMessages"]>[number][];
-      messageHeight?: string;
-    }
-  ) => React.JSX.Element;
+  messageList: ReturnType<typeof useCloud<typeof MessageListCS>>;
+  displayMessage?: DisplayMessageFn<T>;
   placeholder?: string;
 }) {
-  const { data: messages, loading } = useCloudQuery(props.chatbot.getMessages);
-
+  const { data: messages, loading } = useCloudQuery(
+    props.messageList.getMessages
+  );
   const scrollBoxRef = useRef<HTMLDivElement>(null);
-
   const [loaded, setLoaded] = useState(false);
+
   useEffect(() => {
     if (loaded) {
       scrollTo(scrollBoxRef.current, scrollBoxRef.current.scrollHeight, 0.3);
@@ -79,36 +72,40 @@ export function Chat<
         >
           <ChatMessages
             displayMessage={props.displayMessage}
-            messageList={props.chatbot}
+            messageList={props.messageList}
           />
         </div>
       </div>
       <ChatInput
         scrollBox={scrollBoxRef.current}
         placeholder={props.placeholder}
-        messageList={props.chatbot}
+        messageList={props.messageList}
       />
     </div>
   );
 }
 
+type DisplayMessageFn<T extends MessageListCS<any>> = (
+  message: ReturnType<T["getMessages"]>[number],
+  i: number,
+  options: {
+    lastMessage: ReturnType<T["getMessages"]>[number] | undefined;
+    nextMessage: ReturnType<T["getMessages"]>[number] | undefined;
+    renderedMessages: ReturnType<T["getMessages"]>[number][];
+    animatedHeight?: number;
+    animatedWidth?: number;
+  }
+) => React.JSX.Element;
+
 export function ChatMessages<
   MessageTypes extends MessageCS<any>[],
   T extends MessageListCS<MessageTypes>
 >(props: {
-  messageList: ReturnType<typeof useCloud<typeof MessageListCS>>;
-  displayMessage: (
-    message: ReturnType<T["getMessages"]>[number],
-    i: number,
-    options: {
-      lastMessage: ReturnType<T["getMessages"]>[number] | undefined;
-      nextMessage: ReturnType<T["getMessages"]>[number] | undefined;
-      renderedMessages: ReturnType<T["getMessages"]>[number][];
-      messageHeight?: string;
-    }
-  ) => React.JSX.Element;
+  messageList?: ReturnType<typeof useCloud<typeof MessageListCS>>;
+  displayMessage: DisplayMessageFn<T>;
 }) {
   const { data: messages } = useCloudQuery(props.messageList.getMessages);
+  const displayMessage = props.displayMessage ?? defaultDisplayMessage;
 
   return (
     messages && (
@@ -139,12 +136,14 @@ export function ChatMessages<
                   gridRow: "1 / span 2",
                 }}
               >
-                {props.displayMessage(message, i, {
+                {displayMessage(message, i, {
                   lastMessage: messages[i - 1],
                   nextMessage: messages[i + 1],
                   renderedMessages: messages,
                   // @ts-expect-error: this is client side and only used for animation
-                  messageHeight: message.height / 2 + "px",
+                  animatedHeight: message.height,
+                  // @ts-expect-error: this is client side and only used for animation
+                  animatedWidth: message.width,
                 })}
               </div>
             </motion.div>
@@ -296,3 +295,26 @@ export function ChatInput(props: {
     </form>
   );
 }
+
+const defaultDisplayMessage: DisplayMessageFn<MessageListCS<any>> = (
+  message,
+  _i,
+  { lastMessage, nextMessage, animatedHeight, animatedWidth }
+) => {
+  switch (message.data.type) {
+    case "TEXT_MESSAGE": {
+      return (
+        <TextMessage
+          message={message}
+          lastMessage={lastMessage}
+          nextMessage={nextMessage}
+          animatedHeight={animatedHeight}
+          animatedWidth={animatedWidth}
+        />
+      );
+    }
+    default: {
+      return <div>Cannot display message type: {message.data.type}</div>;
+    }
+  }
+};
