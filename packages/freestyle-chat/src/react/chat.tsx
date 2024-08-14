@@ -16,6 +16,8 @@ export function Chat<
   messageList: ReturnType<typeof useCloud<typeof MessageListCS>>;
   displayMessage?: DisplayMessageFn<T>;
   placeholder?: string;
+  submitButtonBackgroundColor?: string;
+  messageInput?: JSX.Element;
 }) {
   const { data: messages, loading } = useCloudQuery(
     props.messageList.getMessages
@@ -76,11 +78,14 @@ export function Chat<
           />
         </div>
       </div>
-      <ChatInput
-        scrollBox={scrollBoxRef.current}
-        placeholder={props.placeholder}
-        messageList={props.messageList}
-      />
+      {props.messageInput ?? (
+        <ChatInput
+          submitButtonBackgroundColor={props.submitButtonBackgroundColor}
+          scrollBox={scrollBoxRef.current}
+          placeholder={props.placeholder}
+          messageList={props.messageList}
+        />
+      )}
     </div>
   );
 }
@@ -158,6 +163,7 @@ export function ChatInput(props: {
   messageList: ReturnType<typeof useCloud<typeof MessageListCS>>;
   scrollBox?: HTMLDivElement;
   placeholder?: string;
+  submitButtonBackgroundColor?: string;
 }) {
   const { data: messages, mutate } = useCloudQuery(
     props.messageList.getMessages
@@ -176,6 +182,34 @@ export function ChatInput(props: {
     )}px`;
   }, [value]);
 
+  async function sendMessage(e) {
+    const text = value;
+    if (text.length > 0) {
+      mutate([
+        ...messages,
+        {
+          id: crypto.randomUUID(),
+          sender: {
+            id: "",
+            displayName: "",
+          },
+          isSelf: true,
+          data: {
+            type: "TEXT_MESSAGE",
+            text: value,
+          },
+          // @ts-expect-error: this is client side and only used for animation
+          height: e?.currentTarget.scrollHeight,
+          width: e && getTextWidth(value, getCanvasFont(e.currentTarget)),
+        },
+      ]);
+
+      setValue("");
+      await props.messageList.sendTextMessage({ text });
+      scrollTo(props.scrollBox, props.scrollBox.scrollHeight, 0.3);
+    }
+  }
+
   return (
     <form
       style={{
@@ -190,10 +224,7 @@ export function ChatInput(props: {
       }}
       onSubmit={async (e) => {
         e.preventDefault();
-        const text = e.target.elements.text.value;
-        if (text.length > 0) {
-          await props.messageList.sendTextMessage({ text });
-        }
+        sendMessage(e);
       }}
     >
       <div
@@ -211,31 +242,7 @@ export function ChatInput(props: {
           onKeyPress={async (e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
-              const text = value;
-              if (text.length > 0) {
-                mutate([
-                  ...messages,
-                  {
-                    id: crypto.randomUUID(),
-                    sender: {
-                      id: "",
-                      displayName: "",
-                    },
-                    isSelf: true,
-                    data: {
-                      type: "TEXT_MESSAGE",
-                      text: value,
-                    },
-                    // @ts-expect-error: this is client side and only used for animation
-                    height: e.currentTarget.scrollHeight,
-                    width: getTextWidth(value, getCanvasFont(e.currentTarget)),
-                  },
-                ]);
-
-                setValue("");
-                await props.messageList.sendTextMessage({ text });
-                scrollTo(props.scrollBox, props.scrollBox.scrollHeight, 0.3);
-              }
+              sendMessage(e);
             }
           }}
           ref={textareaRef}
@@ -275,7 +282,7 @@ export function ChatInput(props: {
             display: value.length > 0 ? "flex" : "none",
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: "#2563eb",
+            backgroundColor: props.submitButtonBackgroundColor ?? "#2563eb",
           }}
         >
           <svg
